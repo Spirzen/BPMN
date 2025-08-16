@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_1tzj24e" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.21.0" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.4.0">
+  <bpmn:process id="ClientOrderProcess" name="Обработка заказа клиента в интернет-магазине" isExecutable="true">
+    <bpmn:startEvent id="StartEvent" name="Старт">
+      <bpmn:outgoing>Flow1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:task id="OrderCreation" name="Размещение заказа на сайте">
+      <bpmn:incoming>Flow1</bpmn:incoming>
+      <bpmn:outgoing>Flow2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:sequenceFlow id="Flow1" sourceRef="StartEvent" targetRef="OrderCreation" />
+    <bpmn:task id="ProcessingOrderByClient" name="Оформление заказа клиентом">
+      <bpmn:incoming>Flow2</bpmn:incoming>
+      <bpmn:outgoing>Flow3</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:sequenceFlow id="Flow2" sourceRef="OrderCreation" targetRef="ProcessingOrderByClient" />
+    <bpmn:task id="WarehouseChecking" name="Проверка наличия товаров на складе">
+      <bpmn:incoming>Flow3</bpmn:incoming>
+      <bpmn:outgoing>Flow4</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:sequenceFlow id="Flow3" sourceRef="ProcessingOrderByClient" targetRef="WarehouseChecking" />
+    <bpmn:exclusiveGateway id="Gateway1">
+      <bpmn:incoming>Flow4</bpmn:incoming>
+      <bpmn:outgoing>Flow7</bpmn:outgoing>
+      <bpmn:outgoing>Flow6</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="OrderValidationData" name="Проверка корректности данных заказа">
+      <bpmn:incoming>Flow6</bpmn:incoming>
+      <bpmn:outgoing>Flow8</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="ClientNotifySending" name="Отправка уведомления клиенту">
+      <bpmn:incoming>Flow7</bpmn:incoming>
+      <bpmn:outgoing>Flow5</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="OrderWaitingStatus" name="Перевод заказа в статус &#34;Ожидание поступления&#34;">
+      <bpmn:incoming>Flow5</bpmn:incoming>
+      <bpmn:outgoing>Flow_1cfm8be</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:sequenceFlow id="Flow7" name="Товара нет в наличии" sourceRef="Gateway1" targetRef="ClientNotifySending">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=onWarehouse=false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow5" sourceRef="ClientNotifySending" targetRef="OrderWaitingStatus" />
+    <bpmn:sequenceFlow id="Flow4" sourceRef="WarehouseChecking" targetRef="Gateway1" />
+    <bpmn:sequenceFlow id="Flow6" name="Товар в наличии" sourceRef="Gateway1" targetRef="OrderValidationData">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=onWarehouse=true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:exclusiveGateway id="Gateway2">
+      <bpmn:incoming>Flow8</bpmn:incoming>
+      <bpmn:outgoing>Flow10</bpmn:outgoing>
+      <bpmn:outgoing>Flow9</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="SedningToWarehouse" name="Передача заказа на склад">
+      <bpmn:incoming>Flow10</bpmn:incoming>
+      <bpmn:incoming>Flow_07po9mu</bpmn:incoming>
+      <bpmn:outgoing>Flow11</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="ReviewData" name="Уточнение информации у клиента">
+      <bpmn:incoming>Flow9</bpmn:incoming>
+      <bpmn:outgoing>Flow_07po9mu</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:sequenceFlow id="Flow8" sourceRef="OrderValidationData" targetRef="Gateway2" />
+    <bpmn:sequenceFlow id="Flow10" name="Данные корректны" sourceRef="Gateway2" targetRef="SedningToWarehouse">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=isValid=true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow9" name="Данные некорректны" sourceRef="Gateway2" targetRef="ReviewData">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=isValid=false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_07po9mu" sourceRef="ReviewData" targetRef="SedningToWarehouse" />
+    <bpmn:task id="OrderPreparing" name="Подготовка заказа к отправке">
+      <bpmn:incoming>Flow11</bpmn:incoming>
+      <bpmn:incoming>Flow13</bpmn:incoming>
+      <bpmn:outgoing>Flow12</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway3">
+      <bpmn:incoming>Flow12</bpmn:incoming>
+      <bpmn:outgoing>Flow15</bpmn:outgoing>
+      <bpmn:outgoing>Flow14</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow11" sourceRef="SedningToWarehouse" targetRef="OrderPreparing" />
+    <bpmn:task id="ManagerNotify" name="Информирование менеджера">
+      <bpmn:incoming>Flow15</bpmn:incoming>
+      <bpmn:outgoing>Flow16</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="FixingProblems" name="Устранение проблем">
+      <bpmn:incoming>Flow16</bpmn:incoming>
+      <bpmn:outgoing>Flow13</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:sequenceFlow id="Flow15" name="Возникли проблемы" sourceRef="Gateway3" targetRef="ManagerNotify">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=haveProblems=true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow16" sourceRef="ManagerNotify" targetRef="FixingProblems" />
+    <bpmn:sequenceFlow id="Flow13" sourceRef="FixingProblems" targetRef="OrderPreparing" />
+    <bpmn:sequenceFlow id="Flow12" sourceRef="OrderPreparing" targetRef="Gateway3" />
+    <bpmn:task id="Delivery" name="Доставка заказа">
+      <bpmn:incoming>Flow14</bpmn:incoming>
+      <bpmn:outgoing>Flow17</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:sequenceFlow id="Flow14" name="Товары собраны" sourceRef="Gateway3" targetRef="Delivery">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=haveProblems=false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:task id="SendBack" name="Возврат товара или обмен">
+      <bpmn:incoming>Flow19</bpmn:incoming>
+      <bpmn:outgoing>Flow21</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="GettingOrder" name="Получение заказа">
+      <bpmn:incoming>Flow18</bpmn:incoming>
+      <bpmn:outgoing>Flow20</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway4">
+      <bpmn:incoming>Flow17</bpmn:incoming>
+      <bpmn:outgoing>Flow18</bpmn:outgoing>
+      <bpmn:outgoing>Flow19</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow17" sourceRef="Delivery" targetRef="Gateway4" />
+    <bpmn:sequenceFlow id="Flow18" name="Клиент доволен" sourceRef="Gateway4" targetRef="GettingOrder">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=isGood=true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow19" name="Обнаружены проблемы" sourceRef="Gateway4" targetRef="SendBack">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=isGood=false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:endEvent id="End2" name="Негативный результат">
+      <bpmn:incoming>Flow21</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow21" sourceRef="SendBack" targetRef="End2" />
+    <bpmn:endEvent id="End1" name="Положительный результат">
+      <bpmn:incoming>Flow20</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow20" sourceRef="GettingOrder" targetRef="End1" />
+    <bpmn:endEvent id="End3" name="Завершение без эффекта">
+      <bpmn:incoming>Flow_1cfm8be</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1cfm8be" sourceRef="OrderWaitingStatus" targetRef="End3" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="ClientOrderProcess">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent">
+        <dc:Bounds x="179" y="99" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="182" y="142" width="31" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0p97qqx_di" bpmnElement="OrderCreation">
+        <dc:Bounds x="270" y="77" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0pexh9v_di" bpmnElement="ProcessingOrderByClient">
+        <dc:Bounds x="430" y="77" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1cpoztj_di" bpmnElement="WarehouseChecking">
+        <dc:Bounds x="580" y="77" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_0qdovrk_di" bpmnElement="Gateway1" isMarkerVisible="true">
+        <dc:Bounds x="765" y="92" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0tjsq00_di" bpmnElement="ClientNotifySending">
+        <dc:Bounds x="740" y="230" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1sq2hbc_di" bpmnElement="OrderWaitingStatus">
+        <dc:Bounds x="580" y="230" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1fyyqxy_di" bpmnElement="OrderValidationData">
+        <dc:Bounds x="950" y="77" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_0x0hces_di" bpmnElement="Gateway2" isMarkerVisible="true">
+        <dc:Bounds x="1155" y="92" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_08iab8d_di" bpmnElement="ReviewData">
+        <dc:Bounds x="1130" y="250" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0hm0ftg_di" bpmnElement="SedningToWarehouse">
+        <dc:Bounds x="1350" y="77" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1g9y16l_di" bpmnElement="OrderPreparing">
+        <dc:Bounds x="1560" y="77" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0ypsnn1_di" bpmnElement="FixingProblems">
+        <dc:Bounds x="1560" y="250" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_1bcaphi_di" bpmnElement="Gateway3" isMarkerVisible="true">
+        <dc:Bounds x="1795" y="92" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1iveaav_di" bpmnElement="ManagerNotify">
+        <dc:Bounds x="1770" y="250" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1phqwnu_di" bpmnElement="Delivery">
+        <dc:Bounds x="1980" y="77" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_07d008v_di" bpmnElement="Gateway4" isMarkerVisible="true">
+        <dc:Bounds x="2185" y="92" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0kzhaf3_di" bpmnElement="GettingOrder">
+        <dc:Bounds x="2370" y="77" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1yveby4_di" bpmnElement="SendBack">
+        <dc:Bounds x="2370" y="250" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_19a33ds_di" bpmnElement="End3">
+        <dc:Bounds x="442" y="252" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="421" y="295" width="85" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1oeec8q_di" bpmnElement="End1">
+        <dc:Bounds x="2562" y="99" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2540" y="142" width="83" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1btqzfg_di" bpmnElement="End2">
+        <dc:Bounds x="2562" y="272" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2550" y="315" width="61" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_0kud2f9_di" bpmnElement="Flow1">
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="270" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1wzztur_di" bpmnElement="Flow2">
+        <di:waypoint x="370" y="117" />
+        <di:waypoint x="430" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0zbpedh_di" bpmnElement="Flow3">
+        <di:waypoint x="530" y="117" />
+        <di:waypoint x="580" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0xobd7n_di" bpmnElement="Flow7">
+        <di:waypoint x="790" y="142" />
+        <di:waypoint x="790" y="230" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="797" y="167" width="65" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_09569xf_di" bpmnElement="Flow5">
+        <di:waypoint x="740" y="270" />
+        <di:waypoint x="680" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_00ma2re_di" bpmnElement="Flow4">
+        <di:waypoint x="680" y="117" />
+        <di:waypoint x="765" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0d1bzzi_di" bpmnElement="Flow6">
+        <di:waypoint x="815" y="117" />
+        <di:waypoint x="950" y="117" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="841" y="99" width="84" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0oac7gb_di" bpmnElement="Flow8">
+        <di:waypoint x="1050" y="117" />
+        <di:waypoint x="1155" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0uycxj7_di" bpmnElement="Flow10">
+        <di:waypoint x="1205" y="117" />
+        <di:waypoint x="1350" y="117" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1251" y="86" width="54" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0oapran_di" bpmnElement="Flow9">
+        <di:waypoint x="1180" y="142" />
+        <di:waypoint x="1180" y="250" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1107" y="176" width="66" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_07po9mu_di" bpmnElement="Flow_07po9mu">
+        <di:waypoint x="1230" y="290" />
+        <di:waypoint x="1400" y="290" />
+        <di:waypoint x="1400" y="157" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_18z43ue_di" bpmnElement="Flow11">
+        <di:waypoint x="1450" y="117" />
+        <di:waypoint x="1560" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1n7vgou_di" bpmnElement="Flow15">
+        <di:waypoint x="1820" y="142" />
+        <di:waypoint x="1820" y="250" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1753" y="176" width="53" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1f4jc3j_di" bpmnElement="Flow16">
+        <di:waypoint x="1770" y="290" />
+        <di:waypoint x="1660" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_19pdbw5_di" bpmnElement="Flow13">
+        <di:waypoint x="1610" y="250" />
+        <di:waypoint x="1610" y="157" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_05h21uv_di" bpmnElement="Flow12">
+        <di:waypoint x="1660" y="117" />
+        <di:waypoint x="1795" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_04oywae_di" bpmnElement="Flow14">
+        <di:waypoint x="1845" y="117" />
+        <di:waypoint x="1980" y="117" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1870" y="99" width="85" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0lkuqqx_di" bpmnElement="Flow17">
+        <di:waypoint x="2080" y="117" />
+        <di:waypoint x="2185" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_07ounfg_di" bpmnElement="Flow18">
+        <di:waypoint x="2235" y="117" />
+        <di:waypoint x="2370" y="117" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2261" y="99" width="83" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0d9ytws_di" bpmnElement="Flow19">
+        <di:waypoint x="2210" y="142" />
+        <di:waypoint x="2210" y="290" />
+        <di:waypoint x="2370" y="290" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2264" y="256" width="67" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1pmer4q_di" bpmnElement="Flow21">
+        <di:waypoint x="2470" y="290" />
+        <di:waypoint x="2562" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_06eiaor_di" bpmnElement="Flow20">
+        <di:waypoint x="2470" y="117" />
+        <di:waypoint x="2562" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1cfm8be_di" bpmnElement="Flow_1cfm8be">
+        <di:waypoint x="580" y="270" />
+        <di:waypoint x="478" y="270" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
